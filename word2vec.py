@@ -72,8 +72,6 @@ word2index = {w:i for i, w in enumerate(vocab)}
 index2word = {i:w for i, w in enumerate(vocab)}
 
 print("Vocab construction completed, %d words in total"%(len(vocab)))
-
-
 vocab_size = len(vocab)
 embedding_size = 75
 window_size = 2
@@ -83,7 +81,6 @@ W_out =np.random.rand(embedding_size, vocab_size)
 
 
 print("Training begins")
-
 train()
 
 def n_near(target, n):
@@ -95,27 +92,9 @@ def n_near(target, n):
     res = [[val, i] for i, val in enumerate(res)]
     res.sort(key = lambda s:(-s[0]))
     return [[index2word[res[i][1]], res[i][0]] for i in range(1, n+1)]
+
+print(n_near('计算机', 15))
     
 def model_save(outputfile):
     pass
-
-
-def f2():
-    W = np.random.randn(15000, 300)
-    t1 = time()
-    res = np.zeros((1, 300))
-    for i in [9788, 9789, 9791, 9792]:
-        res += W[i]
-    res /= 4
-    return time()-t1
-
-def f1():
-    W = np.random.randn(15000, 300)
-    t1 = time()
-    x = np.zeros((1, 15000))
-    for i in [9788, 9789, 9791, 9792]:
-        x[0][i] += 1
-    x /= 4
-    res = np.dot(x, W)
-    return time()-t1
 
