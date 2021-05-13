@@ -32,3 +32,4 @@ As is shown above, both input and output vectors are in R^V and the vectors in t
 The goal is to get the first weight matrix, each row of which represents the final vector for the corresponding word. Remember, in this little neural network, what really matters is the first weight matrix instead of the output layer because this network doesn't have to predict anything. 
 
 There are two basic training strategies, CBOW and skip-gram. In this demostration, I'm focusing on CBOW, which uses the context words to calculate the central word.
+
