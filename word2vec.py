@@ -1,7 +1,5 @@
 
-'''
-this is a changed version
-'''
+
 
 from zhconv import convert
 import re
@@ -9,92 +7,85 @@ import numpy as np
 import jieba
 from time import time
 
-filename = 'corpus_cn33w_4.txt'
+def vocab_construct(filename, training_len):
+    vocab = set()
+    texts = []
+    i = 0
+    for line in open(filename, 'r', encoding='utf8'):
+        line_ = ''.join(re.findall('[\u4e00-\u9fa5]', line))
+        line_ = convert(line_, 'zh-hans')
+        text_ = [word for word in jieba.cut(line_, cut_all=False)]
+        texts.append(text_)
+        vocab = vocab.union(set(text_))
+        i += 1
+        if i%10==0:
+            print("vocab-stage: %d completed while %d left!"%(i, training_len-i))
+        if i==training_len:
+            break
+    return vocab, texts
 
-i = 0
-training_len = 60
-vocab = set()
+def softmax(x):
+    e = np.exp(x)
+    return e/np.sum(e)
 
-for line in open(filename, 'r', encoding='utf8'):
-    new_line = ''.join(re.findall('[\u4e00-\u9fa5]', line))
-    new_line = convert(new_line, 'zh-hans')
-    for w in jieba.cut(new_line, cut_all=False):
-        vocab.add(w)
-    i += 1
-    if i%10==0:
-        print("vocab-stage: %d completed while %d left!"%(i, training_len-i))
-    if i==training_len:
-        break
+def train():
+    global W_in, W_out
+    t = time()
+    for i, text in enumerate(texts):
+        dW_out = np.zeros((embedding_size, vocab_size))
+        dW_in  = np.zeros((vocab_size, embedding_size))
+        Loss = 0
+        for j in range(window_size, len(text)-window_size):
+            x_idx = [word2index[text[jj+j]] for jj in range(-window_size, window_size+1)]
+            del x_idx[window_size]
+            x = np.zeros((1, vocab_size))
+            h = np.zeros((1, embedding_size))
+            for k in x_idx:
+                x[0][k] += 1
+                h += W_in[k]
+            x /= (2*window_size)
+            h /= (2*window_size)
+            y = softmax(np.dot(h, W_out))
+            Loss += (-np.log(y[0][word2index[text[j]]]))
+            for k in x_idx:
+                y[0][k] -= x[0][k]
+            dW_out += np.dot(h.T, y) #y here is y-x
+            tmp = np.dot(y, W_out.T)
+            for k in x_idx:
+                dW_in[k] += tmp[0]*x[0][k]
+        
+        W_in -= (learning_rate*dW_in)
+        W_out -= (learning_rate*dW_out)
+        Loss /= len(text)
+        if i%10==0:
+            print("training-stage: %d completed while %d left! Time Cost: %.5f"%(i, training_len-i, time()-t))
+            t = time()
+        print("Loss is ", Loss) 
 
+####if __name__ == '__main__':
+
+filename = 'corpus_cn33w.txt'
+training_len = 30
+
+vocab, texts = vocab_construct(filename, training_len)
 word2index = {w:i for i, w in enumerate(vocab)}
 index2word = {i:w for i, w in enumerate(vocab)}
 
 print("Vocab construction completed, %d words in total"%(len(vocab)))
 
+
 vocab_size = len(vocab)
 embedding_size = 75
 window_size = 2
-learning_rate = 0.001
-
+learning_rate = 0.0006
 W_in = np.random.rand(vocab_size, embedding_size)
 W_out =np.random.rand(embedding_size, vocab_size)
 
-def softmax(x):
-    return np.exp(x)/np.sum(np.exp(x))
 
 print("Training begins")
-i = 0
-t = time()
 
-for line in open(filename, 'r', encoding='utf8'):
-    text = ''.join(re.findall('[\u4e00-\u9fa5]', line))
-    text = convert(text, 'zh-hans')
-    text = [w for w in jieba.cut(new_line, cut_all=False)]
-    onehot = []
-    dW_out = np.zeros((embedding_size, vocab_size))
-    dW_in  = np.zeros((vocab_size, embedding_size))
-    Loss = 0
-    '''for w in text:
-        xx = np.zeros((1, vocab_size))
-        xx[0][word2index[w]] = 1  # one-hot encoding here!!!!
-        onehot.append(xx)
-        '''
-    # Forward stage
-    for j in range(window_size, len(text)-window_size):
-        x = np.zeros((1, vocab_size))
-        h = np.zeros((1, embedding_size))
-        for jj in range(-window_size, window_size+1):
-            if jj == 0:
-                continue
-            x[0][word2index[text[j+jj]]] += 1
-            h += W_in[j+jj]
-#            x += onehot[j+jj]
-        x /= (2*window_size)
-        h /= (2*window_size)
-        #h = np.dot(x, W_in) # this is a slow way to calculate h
-        y = softmax(np.dot(h, W_out))
-        dW_out += np.dot(h.T, y-x)
-        tmp = np.dot(y-x, W_out.T)
-        for jj in range(-window_size, window_size+1):
-            if jj == 0:
-                continue
-            dW_in[j+jj] += (tmp[0]/(2*window_size))
-        #dW_in  += np.dot(x.T, np.dot(y-x, W_out.T)) # another slowing down 
-        Loss += (-np.log(y[0][word2index[text[j]]]))
-    
-    # Backword stage
-    W_in -= (learning_rate*dW_in)
-    W_out -= (learning_rate*dW_out)
-    Loss /= len(text)
-    
-    i += 1
-    if i%10==0:
-        print("training-stage: %d completed while %d left! Time Cost: %.5f"%(i, training_len-i, time()-t))
-        t = time()
-    if i==training_len:
-        break
-    print("Loss is ", Loss)  
-        
+train()
+
 def n_near(target, n):
     if target not in vocab:
         print("Unsupported word")
