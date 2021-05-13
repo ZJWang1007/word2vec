@@ -1,7 +1,7 @@
 Word2Vec Implementation With Numpy
 ====
 
-First thing's first, this can never be a tutorial nor an example code. It's just a personal attempt to implement Word2Vec. Bugs and low efficiencies can be found everywhere in my code so both your advice and opinions are well welcomed here. Hope it will get you to understand or at least give you the glimpse of the mechanism behind it all. :D
+First thing first, this can never be a tutorial nor an example code. It's just a personal attempt to implement Word2Vec. Bugs and low efficiencies can be found everywhere in my code so both your advice and opinions are well welcomed here. Hope it will get you to understand or at least give you the glimpse of the mechanism behind it all. :D
 
 References 
 ----
