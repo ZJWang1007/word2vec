@@ -16,3 +16,8 @@ Mikolov T, Chen K, Corrado G, et al. Efficient estimation of word representation
 https://arxiv.org/pdf/1411.2738.pdf 
 
 Rong X. word2vec parameter learning explained[J]. arXiv preprint arXiv:1411.2738, 2014. 
+
+Environment
+----
+I'm using **Numpy**, **jieba**(for word segmentation), **re**(regular expression for leaving out all the non-Chinese characters) and **zhconv**(for turning traditional Chinese into simplified Chinese if needed). 
+
